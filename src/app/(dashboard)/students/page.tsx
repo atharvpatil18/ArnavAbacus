@@ -31,6 +31,7 @@ export default function StudentsPage() {
     const [searchTerm, setSearchTerm] = useState('')
     const [students, setStudents] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         const fetchStudents = async () => {
@@ -50,9 +51,13 @@ export default function StudentsPage() {
                 if (res.ok) {
                     const data = await res.json()
                     setStudents(data)
+                    setError(null)
+                } else {
+                    setError('Failed to load students')
                 }
             } catch (error) {
                 console.error('Failed to fetch students', error)
+                setError('Failed to load students')
             } finally {
                 setLoading(false)
             }
@@ -111,6 +116,12 @@ export default function StudentsPage() {
                             <TableRow>
                                 <TableCell colSpan={7} className="text-center py-10">
                                     Loading...
+                                </TableCell>
+                            </TableRow>
+                        ) : error ? (
+                            <TableRow>
+                                <TableCell colSpan={7} className="text-center py-10 text-destructive">
+                                    {error}
                                 </TableCell>
                             </TableRow>
                         ) : students.length === 0 ? (

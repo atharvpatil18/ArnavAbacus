@@ -19,16 +19,18 @@ import { format } from 'date-fns'
 
 interface FeeRecord {
     id: string
-    student: { name: string }
+    student: { name: string; level: string }
     amount: number
-    date: string
-    type: string
+    dueDate: string
+    paidDate?: string | null
+    cycle: string
     status: string
 }
 
 export default function FeesPage() {
     const [fees, setFees] = useState<FeeRecord[]>([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
     const [searchTerm, setSearchTerm] = useState('')
 
     useEffect(() => {
@@ -38,9 +40,13 @@ export default function FeesPage() {
                 if (res.ok) {
                     const data = await res.json()
                     setFees(data)
+                    setError(null)
+                } else {
+                    setError('Failed to load fee records')
                 }
             } catch (error) {
                 console.error('Failed to fetch fees', error)
+                setError('Failed to load fee records')
             } finally {
                 setLoading(false)
             }
@@ -125,9 +131,9 @@ export default function FeesPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Date</TableHead>
+                                <TableHead>Due Date</TableHead>
                                 <TableHead>Student</TableHead>
-                                <TableHead>Type</TableHead>
+                                <TableHead>Cycle</TableHead>
                                 <TableHead>Amount</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
@@ -138,6 +144,10 @@ export default function FeesPage() {
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center py-8">Loading records...</TableCell>
                                 </TableRow>
+                            ) : error ? (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="text-center py-8 text-destructive">{error}</TableCell>
+                                </TableRow>
                             ) : filteredFees.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No fee records found.</TableCell>
@@ -145,9 +155,9 @@ export default function FeesPage() {
                             ) : (
                                 filteredFees.map((fee) => (
                                     <TableRow key={fee.id}>
-                                        <TableCell>{format(new Date(fee.date), 'PPP')}</TableCell>
+                                        <TableCell>{format(new Date(fee.dueDate), 'PPP')}</TableCell>
                                         <TableCell className="font-medium">{fee.student.name}</TableCell>
-                                        <TableCell>{fee.type}</TableCell>
+                                        <TableCell>{fee.cycle}</TableCell>
                                         <TableCell>₹{fee.amount.toLocaleString()}</TableCell>
                                         <TableCell>
                                             <Badge variant={fee.status === 'PAID' ? 'default' : 'secondary'} className={fee.status === 'PAID' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'}>
