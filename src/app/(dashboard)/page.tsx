@@ -8,6 +8,7 @@ import { Users, Calendar, CreditCard, TrendingUp, ArrowUpRight, ArrowDownRight, 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { DashboardCharts } from '@/components/dashboard/dashboard-charts'
 
 interface DashboardStats {
     totalStudents: number
@@ -42,12 +43,7 @@ export default function DashboardPage() {
         }
     }, [session])
 
-    // Redirect parents to their students list
-    useEffect(() => {
-        if (status === 'authenticated' && session?.user?.role === 'PARENT') {
-            router.push('/students')
-        }
-    }, [session, status, router])
+
 
     // Teacher sees today's schedule
     if (session?.user?.role === 'TEACHER') {
@@ -106,11 +102,54 @@ export default function DashboardPage() {
         )
     }
 
-    // Parent dashboard handled by redirect
+    // Parent dashboard
     if (session?.user?.role === 'PARENT') {
         return (
-            <div className="flex items-center justify-center h-64">
-                <p className="text-muted-foreground">Redirecting...</p>
+            <div className="space-y-8 animate-in fade-in duration-500">
+                <div>
+                    <h2 className="text-3xl font-bold tracking-tight text-foreground font-sans">My Children</h2>
+                    <p className="text-muted-foreground mt-1">
+                        Track your child's progress, attendance, and fees.
+                    </p>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <Card className="border-t-4 border-t-violet-500 hover:shadow-lg transition-shadow cursor-pointer border-2 border-border shadow-[4px_4px_0px_0px_var(--border)]" onClick={() => router.push('/students')}>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Users className="h-5 w-5 text-violet-500" />
+                                Student Profile
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground">View academic details and progress</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-t-4 border-t-emerald-500 hover:shadow-lg transition-shadow cursor-pointer border-2 border-border shadow-[4px_4px_0px_0px_var(--border)]" onClick={() => router.push('/attendance')}>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Activity className="h-5 w-5 text-emerald-500" />
+                                Attendance
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground">Check attendance records</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-t-4 border-t-amber-500 hover:shadow-lg transition-shadow cursor-pointer border-2 border-border shadow-[4px_4px_0px_0px_var(--border)]" onClick={() => router.push('/fees')}>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <CreditCard className="h-5 w-5 text-amber-500" />
+                                Fees & Payments
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground">View fee status and history</p>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         )
     }
@@ -119,102 +158,119 @@ export default function DashboardPage() {
     const statsCards = [
         {
             title: 'Total Students',
-            value: loading ? '...' : stats.totalStudents.toString(),
+            value: stats.totalStudents.toString(),
             change: '+12% from last month',
             trend: 'up',
             icon: Users,
-            color: 'text-indigo-600',
-            bg: 'bg-indigo-50',
-            border: 'border-indigo-100'
+            color: 'text-white',
+            bg: 'bg-bead-blue',
+            border: 'border-border'
         },
         {
             title: 'Active Batches',
-            value: loading ? '...' : stats.activeBatches.toString(),
+            value: stats.activeBatches.toString(),
             change: 'Running smoothly',
             trend: 'neutral',
             icon: Calendar,
-            color: 'text-pink-600',
-            bg: 'bg-pink-50',
-            border: 'border-pink-100'
+            color: 'text-white',
+            bg: 'bg-bead-purple',
+            border: 'border-border'
         },
         {
             title: 'Pending Fees',
-            value: loading ? '...' : `₹${stats.pendingFees.toLocaleString()}`,
+            value: `₹${stats.pendingFees.toLocaleString()}`,
             change: 'Due this week',
             trend: 'down',
             icon: CreditCard,
-            color: 'text-amber-600',
-            bg: 'bg-amber-50',
-            border: 'border-amber-100'
+            color: 'text-white',
+            bg: 'bg-bead-yellow',
+            border: 'border-border'
         },
         {
             title: 'Attendance Rate',
-            value: loading ? '...' : `${stats.attendanceRate}%`,
-            change: '+2% increase',
-            trend: 'up',
+            value: `${stats.attendanceRate}%`,
+            change: stats.attendanceRate > 0 ? 'Current Month' : 'No data',
+            trend: stats.attendanceRate > 0 ? 'neutral' : 'neutral',
             icon: TrendingUp,
-            color: 'text-emerald-600',
-            bg: 'bg-emerald-50',
-            border: 'border-emerald-100'
+            color: 'text-white',
+            bg: 'bg-bead-green',
+            border: 'border-border'
         },
     ]
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard Overview</h2>
+                <h2 className="text-3xl font-bold tracking-tight text-foreground font-sans">Dashboard Overview</h2>
                 <p className="text-muted-foreground mt-1">
                     Welcome back! Here's what's happening at your academy today.
                 </p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {statsCards.map((stat) => {
-                    const Icon = stat.icon
-                    return (
-                        <Card key={stat.title} className={cn("border-l-4 shadow-sm hover:shadow-md transition-all duration-200", stat.border)}>
+                {loading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                        <Card key={i} className="border-2 border-border shadow-[2px_2px_0px_0px_var(--border)]">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-gray-600">
-                                    {stat.title}
-                                </CardTitle>
-                                <div className={cn("p-2 rounded-full", stat.bg)}>
-                                    <Icon className={cn("h-4 w-4", stat.color)} />
-                                </div>
+                                <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                                <div className="h-8 w-8 bg-muted animate-pulse rounded-lg" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                                <div className="flex items-center mt-1 text-xs text-muted-foreground">
-                                    {stat.trend === 'up' && <ArrowUpRight className="mr-1 h-3 w-3 text-emerald-500" />}
-                                    {stat.trend === 'down' && <ArrowDownRight className="mr-1 h-3 w-3 text-red-500" />}
-                                    {stat.trend === 'neutral' && <Activity className="mr-1 h-3 w-3 text-blue-500" />}
-                                    <span className={cn(
-                                        stat.trend === 'up' ? 'text-emerald-600' :
-                                            stat.trend === 'down' ? 'text-red-600' : 'text-gray-600'
-                                    )}>
-                                        {stat.change}
-                                    </span>
-                                </div>
+                                <div className="h-8 w-16 bg-muted animate-pulse rounded mb-2" />
+                                <div className="h-3 w-32 bg-muted animate-pulse rounded" />
                             </CardContent>
                         </Card>
-                    )
-                })}
+                    ))
+                ) : (
+                    statsCards.map((stat) => {
+                        const Icon = stat.icon
+                        return (
+                            <Card key={stat.title} className="hover:-translate-y-1 transition-transform duration-200 border-2 border-border shadow-[4px_4px_0px_0px_var(--border)]">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-bold text-muted-foreground">
+                                        {stat.title}
+                                    </CardTitle>
+                                    <div className={cn("p-2 rounded-lg border-2 border-border shadow-[2px_2px_0px_0px_var(--border)]", stat.bg)}>
+                                        <Icon className={cn("h-4 w-4", stat.color)} />
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-3xl font-bold text-foreground font-sans">{stat.value}</div>
+                                    <div className="flex items-center mt-1 text-xs font-medium">
+                                        {stat.trend === 'up' && <ArrowUpRight className="mr-1 h-3 w-3 text-bead-green" />}
+                                        {stat.trend === 'down' && <ArrowDownRight className="mr-1 h-3 w-3 text-bead-red" />}
+                                        {stat.trend === 'neutral' && <Activity className="mr-1 h-3 w-3 text-bead-blue" />}
+                                        <span className={cn(
+                                            stat.trend === 'up' ? 'text-bead-green' :
+                                                stat.trend === 'down' ? 'text-bead-red' : 'text-muted-foreground'
+                                        )}>
+                                            {stat.change}
+                                        </span>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )
+                    })
+                )}
             </div>
 
+            {/* Removed DashboardCharts placeholder as per Phase 6.2 */}
+
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-                <Card className="col-span-4 border-t-4 border-t-indigo-500 shadow-sm">
+                <Card className="col-span-4 border-2 border-border shadow-[4px_4px_0px_0px_var(--border)]">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Activity className="h-5 w-5 text-indigo-500" />
+                        <CardTitle className="flex items-center gap-2 font-sans">
+                            <Activity className="h-5 w-5 text-bead-blue" />
                             Recent Activity
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-col items-center justify-center h-[200px] text-center space-y-3">
-                            <div className="p-3 bg-gray-50 rounded-full">
-                                <Activity className="h-6 w-6 text-gray-400" />
+                            <div className="p-3 bg-secondary rounded-full border-2 border-border">
+                                <Activity className="h-6 w-6 text-muted-foreground" />
                             </div>
                             <div className="space-y-1">
-                                <p className="text-sm font-medium text-gray-900">No recent activity</p>
+                                <p className="text-sm font-bold text-foreground">No recent activity</p>
                                 <p className="text-xs text-muted-foreground max-w-[200px]">
                                     Actions taken in the system will appear here automatically.
                                 </p>
@@ -222,20 +278,20 @@ export default function DashboardPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="col-span-3 border-t-4 border-t-pink-500 shadow-sm">
+                <Card className="col-span-3 border-2 border-border shadow-[4px_4px_0px_0px_var(--border)]">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Calendar className="h-5 w-5 text-pink-500" />
+                        <CardTitle className="flex items-center gap-2 font-sans">
+                            <Calendar className="h-5 w-5 text-bead-purple" />
                             Upcoming Classes
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-col items-center justify-center h-[200px] text-center space-y-3">
-                            <div className="p-3 bg-gray-50 rounded-full">
-                                <Calendar className="h-6 w-6 text-gray-400" />
+                            <div className="p-3 bg-secondary rounded-full border-2 border-border">
+                                <Calendar className="h-6 w-6 text-muted-foreground" />
                             </div>
                             <div className="space-y-1">
-                                <p className="text-sm font-medium text-gray-900">No classes today</p>
+                                <p className="text-sm font-bold text-foreground">No classes today</p>
                                 <p className="text-xs text-muted-foreground max-w-[200px]">
                                     Schedule batches to see upcoming classes here.
                                 </p>

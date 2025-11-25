@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -91,6 +91,18 @@ export default function AddStudentPage() {
     const [credentials, setCredentials] = useState<{ email: string, password: string } | null>(null)
     const [openCredentials, setOpenCredentials] = useState(false)
 
+    // Navigation Guard
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (form.formState.isDirty) {
+                e.preventDefault()
+                e.returnValue = ''
+            }
+        }
+        window.addEventListener('beforeunload', handleBeforeUnload)
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+    }, [form.formState.isDirty])
+
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setLoading(true)
         try {
@@ -113,6 +125,9 @@ export default function AddStudentPage() {
                 description: 'Student created successfully.',
                 className: 'bg-green-500 text-white',
             })
+
+            // Reset form to prevent guard from triggering
+            form.reset(values)
 
             if (data.credentials) {
                 setCredentials(data.credentials)
@@ -137,6 +152,16 @@ export default function AddStudentPage() {
         setOpenCredentials(false)
         router.push('/students')
         router.refresh()
+    }
+
+    const handleCancel = () => {
+        if (form.formState.isDirty) {
+            if (window.confirm('You have unsaved changes. Are you sure you want to leave?')) {
+                router.back()
+            }
+        } else {
+            router.back()
+        }
     }
 
     return (
@@ -338,7 +363,7 @@ export default function AddStudentPage() {
                             </div>
 
                             <div className="flex justify-end gap-4">
-                                <Button variant="outline" type="button" onClick={() => router.back()}>
+                                <Button variant="outline" type="button" onClick={handleCancel}>
                                     Cancel
                                 </Button>
                                 <Button type="submit" disabled={loading}>

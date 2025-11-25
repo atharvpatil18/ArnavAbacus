@@ -70,10 +70,19 @@ export default function CalendarPage() {
                 const res = await fetch(url)
                 if (res.ok) {
                     const data = await res.json()
-                    setAttendanceData(data)
+                    if (Array.isArray(data)) {
+                        setAttendanceData(data)
+                    } else {
+                        console.error('Attendance data is not an array:', data)
+                        setAttendanceData([])
+                    }
+                } else {
+                    console.error('Failed to fetch attendance:', res.statusText)
+                    setAttendanceData([])
                 }
             } catch (error) {
                 console.error('Failed to fetch attendance', error)
+                setAttendanceData([])
             } finally {
                 setLoading(false)
             }

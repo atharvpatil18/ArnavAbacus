@@ -11,6 +11,8 @@ import {
     FileText,
     Settings,
     GraduationCap,
+    BookOpen,
+    DollarSign,
     LogOut,
     Clock
 } from 'lucide-react'
@@ -44,14 +46,7 @@ const allRoutes = [
         icon: Calendar,
         href: '/batches',
         color: 'text-pink-700',
-        roles: ['ADMIN', 'TEACHER']
-    },
-    {
-        label: 'Attendance',
-        icon: GraduationCap,
-        href: '/attendance',
-        color: 'text-orange-700',
-        roles: ['ADMIN', 'TEACHER', 'PARENT']
+        roles: ['ADMIN', 'PARENT']
     },
     {
         label: 'Fees',
@@ -59,6 +54,34 @@ const allRoutes = [
         href: '/fees',
         color: 'text-emerald-500',
         roles: ['ADMIN', 'PARENT']
+    },
+    {
+        label: 'Exams',
+        icon: GraduationCap,
+        href: '/exams',
+        color: 'text-blue-700',
+        roles: ['ADMIN', 'TEACHER', 'PARENT']
+    },
+    {
+        label: 'Homework',
+        icon: BookOpen,
+        href: '/homework',
+        color: 'text-orange-500',
+        roles: ['ADMIN', 'TEACHER', 'PARENT']
+    },
+    {
+        label: 'Demos',
+        icon: Users,
+        href: '/demos',
+        color: 'text-purple-600',
+        roles: ['ADMIN', 'TEACHER']
+    },
+    {
+        label: 'Finance',
+        icon: DollarSign,
+        href: '/finance',
+        color: 'text-green-600',
+        roles: ['ADMIN']
     },
     {
         label: 'Reports',
@@ -87,46 +110,49 @@ export function Sidebar() {
     )
 
     return (
-        <div className="space-y-4 py-4 flex flex-col h-full bg-[#111827] text-white">
-            <div className="px-3 py-2 flex-1">
-                <Link href="/" className="flex items-center pl-3 mb-14">
-                    <div className="relative w-8 h-8 mr-4">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-lg animate-pulse opacity-75"></div>
-                        <div className="relative bg-white rounded-lg w-full h-full flex items-center justify-center">
-                            <span className="text-indigo-600 font-bold text-xl">A</span>
+        <div className="space-y-4 py-4 flex flex-col h-full bg-sidebar border-r-2 border-border text-sidebar-foreground w-64 shrink-0" >
+            <div className="px-4 py-2 flex-1">
+                <Link href="/" className="flex items-center pl-2 mb-10 group">
+                    <div className="relative w-10 h-10 mr-3 transition-transform group-hover:-translate-y-1">
+                        <div className="absolute inset-0 bg-primary rounded-lg border-2 border-border shadow-[3px_3px_0px_0px_var(--border)]"></div>
+                        <div className="relative w-full h-full flex items-center justify-center">
+                            <span className="text-primary-foreground font-bold text-2xl font-sans">A</span>
                         </div>
                     </div>
-                    <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 to-white">
+                    <h1 className="text-xl font-bold font-sans tracking-tight text-foreground">
                         Arnav Abacus
                     </h1>
                 </Link>
-                <div className="space-y-1">
-                    {filteredRoutes.map((route) => (
-                        <Link
-                            key={route.href}
-                            href={route.href}
-                            className={cn(
-                                'text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition',
-                                pathname === route.href
-                                    ? 'text-white bg-white/10'
-                                    : 'text-zinc-400'
-                            )}
-                        >
-                            <div className="flex items-center flex-1">
-                                <route.icon className={cn('h-5 w-5 mr-3', route.color)} />
-                                {route.label}
-                            </div>
-                        </Link>
-                    ))}
+                <div className="space-y-2">
+                    {filteredRoutes.map((route) => {
+                        const isActive = pathname === route.href
+                        return (
+                            <Link
+                                key={route.href}
+                                href={route.href}
+                                className={cn(
+                                    'text-sm group flex p-3 w-full justify-start font-medium cursor-pointer transition-all duration-200 rounded-lg border-2',
+                                    isActive
+                                        ? 'bg-secondary text-secondary-foreground border-border shadow-[3px_3px_0px_0px_var(--border)] -translate-y-[1px]'
+                                        : 'text-muted-foreground border-transparent hover:bg-accent hover:text-accent-foreground hover:border-border'
+                                )}
+                            >
+                                <div className="flex items-center flex-1">
+                                    <route.icon className={cn('h-5 w-5 mr-3 transition-colors', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')} />
+                                    {route.label}
+                                </div>
+                            </Link>
+                        )
+                    })}
                 </div>
             </div>
-            <div className="px-3 py-2">
+            <div className="px-4 py-2">
                 <Button
                     onClick={() => signOut({ callbackUrl: '/login' })}
                     variant="ghost"
-                    className="w-full justify-start text-zinc-400 hover:text-white hover:bg-white/10"
+                    className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:border-destructive/20"
                 >
-                    <LogOut className="h-5 w-5 mr-3 text-red-500" />
+                    <LogOut className="h-5 w-5 mr-3" />
                     Sign Out
                 </Button>
             </div>

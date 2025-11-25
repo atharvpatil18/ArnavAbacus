@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import { UserRole, requireRole } from '@/lib/rbac'
 import { createFeeSchema, validateRequest } from '@/lib/validation'
+import { logger } from '@/lib/logger'
+import { ratelimit } from '@/lib/ratelimit'
 
 export async function GET(request: Request) {
     try {
@@ -47,7 +49,7 @@ export async function GET(request: Request) {
 
         return NextResponse.json(fees)
     } catch (error) {
-        console.error('[FEES_GET]', error)
+        logger.error({ error, context: 'FEES_GET' }, 'Failed to fetch fees')
         return new NextResponse('Internal Error', { status: 500 })
     }
 }
@@ -57,6 +59,14 @@ export async function POST(request: Request) {
         const session = await auth()
         if (!session) {
             return new NextResponse('Unauthorized', { status: 401 })
+        }
+
+        // Rate limiting for write operations
+        const identifier = session.user.id || 'anonymous'
+        const { success } = await ratelimit.limit(identifier)
+        if (!success) {
+            logger.warn({ userId: identifier }, 'Rate limit exceeded for fee creation')
+            return new NextResponse('Too Many Requests', { status: 429 })
         }
 
         // RBAC: Only admins can create fee records
@@ -106,7 +116,7 @@ export async function POST(request: Request) {
             )
         }
 
-        console.error('[FEES_POST]', error)
+        logger.error({ error, context: 'FEES_POST' }, 'Failed to create fee')
         return new NextResponse('Internal Error', { status: 500 })
     }
 }

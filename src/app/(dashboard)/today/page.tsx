@@ -76,49 +76,53 @@ export default async function TodaySchedulePage() {
             </div>
 
             {batches.length === 0 ? (
-                <Card>
+                <Card className="border-2 border-border shadow-[4px_4px_0px_0px_var(--border)] rounded-xl">
                     <CardContent className="py-12 text-center">
-                        <p className="text-muted-foreground">No batches scheduled for today.</p>
+                        <p className="text-muted-foreground font-medium">No batches scheduled for today.</p>
                     </CardContent>
                 </Card>
             ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {batches.map((batch) => (
-                        <Card key={batch.id} className="hover:shadow-md transition-shadow">
-                            <CardHeader>
+                        <Card key={batch.id} className="border-2 border-border shadow-[4px_4px_0px_0px_var(--border)] rounded-xl hover:-translate-y-1 transition-transform duration-200">
+                            <CardHeader className="bg-secondary/50 border-b-2 border-border pb-3">
                                 <CardTitle className="flex items-center justify-between">
-                                    <span className="text-lg">{batch.name}</span>
-                                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                                    <span className="text-lg font-bold font-sans">{batch.name}</span>
+                                    <Badge variant="outline" className="bg-bead-green text-white border-2 border-border shadow-sm font-bold">
                                         {batch.students.length} Students
                                     </Badge>
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Clock className="h-4 w-4" />
+                            <CardContent className="space-y-4 pt-4">
+                                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                                    <div className="p-1.5 bg-bead-blue/10 rounded-md border border-bead-blue/20">
+                                        <Clock className="h-4 w-4 text-bead-blue" />
+                                    </div>
                                     <span>{batch.timeSlot || 'No time set'}</span>
                                 </div>
 
                                 {batch.level && (
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Users className="h-4 w-4" />
+                                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                                        <div className="p-1.5 bg-bead-purple/10 rounded-md border border-bead-purple/20">
+                                            <Users className="h-4 w-4 text-bead-purple" />
+                                        </div>
                                         <span>Level: {batch.level}</span>
                                     </div>
                                 )}
 
                                 {session.user.role === 'ADMIN' && batch.teacher && (
-                                    <div className="text-sm text-muted-foreground">
+                                    <div className="text-sm text-muted-foreground font-medium pl-1">
                                         Teacher: {batch.teacher.name}
                                     </div>
                                 )}
 
                                 <div className="flex gap-2 pt-2">
-                                    <Button asChild size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700">
+                                    <Button asChild size="sm" className="flex-1 bg-bead-green hover:bg-bead-green/90 text-white border-2 border-border shadow-[2px_2px_0px_0px_var(--border)] active:translate-y-[2px] active:shadow-none transition-all">
                                         <Link href={`/attendance/mark/${batch.id}`}>
                                             Mark Attendance
                                         </Link>
                                     </Button>
-                                    <Button asChild size="sm" variant="outline" className="flex-1">
+                                    <Button asChild size="sm" variant="outline" className="flex-1 border-2 border-border shadow-[2px_2px_0px_0px_var(--border)] active:translate-y-[2px] active:shadow-none transition-all bg-white hover:bg-secondary">
                                         <Link href={`/batches/${batch.id}`}>
                                             View Details
                                         </Link>

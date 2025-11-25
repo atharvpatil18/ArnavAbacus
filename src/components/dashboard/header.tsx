@@ -13,15 +13,18 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import Link from 'next/link'
+import { NotificationBadge } from '@/components/dashboard/notification-badge'
 
 export default function Header({ title }: { title: string }) {
-    const { data: session } = useSession()
+    const { data: session, status } = useSession()
 
-    const userInitials = session?.user?.name
-        ?.split(' ')
-        .map(n => n[0])
-        .join('')
-        .toUpperCase() || 'U'
+    const userInitials = status === 'loading'
+        ? ''
+        : session?.user?.name
+            ?.split(' ')
+            .map(n => n[0])
+            .join('')
+            .toUpperCase() || 'U'
 
     return (
         <header className="sticky top-0 z-30 flex items-center justify-between border-b border-gray-200 bg-white/80 px-6 py-4 backdrop-blur-md transition-all">
@@ -33,10 +36,7 @@ export default function Header({ title }: { title: string }) {
             </div>
 
             <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" className="relative text-gray-500 hover:text-indigo-600 hover:bg-indigo-50">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
-                </Button>
+                <NotificationBadge />
 
                 <div className="h-6 w-px bg-gray-200"></div>
 

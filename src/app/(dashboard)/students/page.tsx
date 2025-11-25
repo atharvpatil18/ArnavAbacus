@@ -26,7 +26,9 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { StudentFilters } from '@/components/students/student-filters'
 
-export default function StudentsPage() {
+import { Suspense } from 'react'
+
+function StudentsContent() {
     const searchParams = useSearchParams()
     const [searchTerm, setSearchTerm] = useState('')
     const [students, setStudents] = useState<any[]>([])
@@ -91,6 +93,7 @@ export default function StudentsPage() {
                             className="pl-8"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
+                            suppressHydrationWarning
                         />
                     </div>
                 </div>
@@ -98,17 +101,17 @@ export default function StudentsPage() {
                 <StudentFilters />
             </div>
 
-            <div className="rounded-md border bg-white">
+            <div className="rounded-xl border-2 border-border bg-card shadow-[4px_4px_0px_0px_var(--border)] overflow-hidden">
                 <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Level</TableHead>
-                            <TableHead>Batch</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Last Attendance</TableHead>
-                            <TableHead>Fees</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                    <TableHeader className="bg-secondary border-b-2 border-border">
+                        <TableRow className="hover:bg-secondary">
+                            <TableHead className="text-secondary-foreground font-bold">Name</TableHead>
+                            <TableHead className="text-secondary-foreground font-bold hidden md:table-cell">Level</TableHead>
+                            <TableHead className="text-secondary-foreground font-bold hidden md:table-cell">Batch</TableHead>
+                            <TableHead className="text-secondary-foreground font-bold">Status</TableHead>
+                            <TableHead className="text-secondary-foreground font-bold hidden lg:table-cell">Last Attendance</TableHead>
+                            <TableHead className="text-secondary-foreground font-bold hidden lg:table-cell">Fees</TableHead>
+                            <TableHead className="text-right text-secondary-foreground font-bold">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -132,51 +135,74 @@ export default function StudentsPage() {
                             </TableRow>
                         ) : (
                             students.map((student: any) => (
-                                <TableRow key={student.id}>
+                                <TableRow key={student.id} className="border-b border-border hover:bg-muted/50 even:bg-muted/30">
                                     <TableCell>
                                         <div className="flex items-center gap-3">
-                                            <Avatar className="h-9 w-9">
-                                                <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${student.name}`} alt={student.name} />
-                                                <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+                                            <Avatar className="h-9 w-9 rounded-lg border-2 border-border">
+                                                <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(student.name)}`} alt={student.name} />
+                                                <AvatarFallback className="rounded-lg">{student.name.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <div>
-                                                <Link href={`/students/${student.id}`} className="font-medium hover:underline">
+                                                <Link href={`/students/${student.id}`} className="font-bold hover:underline text-foreground">
                                                     {student.name}
                                                 </Link>
                                                 <div className="text-xs text-muted-foreground">{student.email}</div>
                                             </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell>{student.level || 'N/A'}</TableCell>
-                                    <TableCell>{student.batch?.name || 'Unassigned'}</TableCell>
+                                    <TableCell className="hidden md:table-cell font-medium">{student.level || 'N/A'}</TableCell>
+                                    <TableCell className="hidden md:table-cell">{student.batch?.name || 'Unassigned'}</TableCell>
                                     <TableCell>
-                                        <Badge variant={student.active ? 'default' : 'secondary'}>
-                                            {student.active ? 'Active' : 'Inactive'}
-                                        </Badge>
+                                        <Button
+                                            variant="ghost"
+                                            className="p-0 h-auto hover:bg-transparent"
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await fetch(`/api/students/${student.id}`, {
+                                                        method: 'PATCH',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ active: !student.active })
+                                                    })
+                                                    if (res.ok) {
+                                                        setStudents(students.map(s =>
+                                                            s.id === student.id ? { ...s, active: !s.active } : s
+                                                        ))
+                                                    }
+                                                } catch (err) {
+                                                    console.error('Failed to toggle status', err)
+                                                }
+                                            }}
+                                        >
+                                            <Badge variant={student.active ? 'default' : 'secondary'} className={student.active ? 'bg-bead-green hover:bg-bead-green/90 border-border cursor-pointer' : 'cursor-pointer'}>
+                                                {student.active ? 'Active' : 'Inactive'}
+                                            </Badge>
+                                        </Button>
                                     </TableCell>
-                                    <TableCell>N/A</TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline">Pending</Badge>
+                                    <TableCell className="hidden lg:table-cell">N/A</TableCell>
+                                    <TableCell className="hidden lg:table-cell">
+                                        <Badge variant={student.feeRecords?.length > 0 ? 'destructive' : 'default'} className={student.feeRecords?.length > 0 ? 'bg-red-500' : 'bg-emerald-500'}>
+                                            {student.feeRecords?.length > 0 ? 'Pending' : 'Paid'}
+                                        </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted border-2 border-transparent hover:border-border">
                                                     <span className="sr-only">Open menu</span>
                                                     <MoreHorizontal className="h-4 w-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
+                                            <DropdownMenuContent align="end" className="border-2 border-border shadow-[4px_4px_0px_0px_var(--border)] rounded-xl">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem asChild>
+                                                <DropdownMenuItem asChild className="focus:bg-secondary focus:text-secondary-foreground cursor-pointer">
                                                     <Link href={`/students/${student.id}`}>View Profile</Link>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem asChild>
+                                                <DropdownMenuItem asChild className="focus:bg-secondary focus:text-secondary-foreground cursor-pointer">
                                                     <Link href={`/students/${student.id}/edit`}>Edit Details</Link>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem>Mark Attendance</DropdownMenuItem>
-                                                <DropdownMenuItem>Record Fee Payment</DropdownMenuItem>
+                                                <DropdownMenuSeparator className="bg-border" />
+                                                <DropdownMenuItem className="focus:bg-secondary focus:text-secondary-foreground cursor-pointer">Mark Attendance</DropdownMenuItem>
+                                                <DropdownMenuItem className="focus:bg-secondary focus:text-secondary-foreground cursor-pointer">Record Fee Payment</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
@@ -187,5 +213,17 @@ export default function StudentsPage() {
                 </Table>
             </div>
         </div>
+    )
+}
+
+export default function StudentsPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+                <div className="text-muted-foreground">Loading students...</div>
+            </div>
+        }>
+            <StudentsContent />
+        </Suspense>
     )
 }

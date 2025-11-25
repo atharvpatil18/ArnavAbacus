@@ -1,5 +1,6 @@
 import { auth } from "@/auth"
 import { NextResponse } from "next/server"
+import { logger } from "@/lib/logger"
 
 export default auth((req) => {
     const { nextUrl } = req
@@ -54,13 +55,13 @@ export default auth((req) => {
 
     // Redirect non-admin users trying to access admin routes
     if (isAdminRoute && userRole !== 'ADMIN') {
-        console.log(`[SECURITY] Blocked ${userRole} from accessing admin route: ${pathname}`)
+        logger.warn({ userRole, pathname }, 'Blocked user from accessing admin route')
         return NextResponse.redirect(new URL('/', nextUrl))
     }
 
     // Redirect non-teacher/admin users trying to access teacher routes
     if (isTeacherRoute && userRole !== 'ADMIN' && userRole !== 'TEACHER') {
-        console.log(`[SECURITY] Blocked ${userRole} from accessing teacher route: ${pathname}`)
+        logger.warn({ userRole, pathname }, 'Blocked user from accessing teacher route')
         return NextResponse.redirect(new URL('/', nextUrl))
     }
 

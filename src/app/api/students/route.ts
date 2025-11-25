@@ -76,6 +76,10 @@ export async function GET(request: Request) {
                         timeSlot: true,
                         days: true,
                     }
+                },
+                feeRecords: {
+                    where: { status: 'PENDING' },
+                    select: { id: true }
                 }
             },
             orderBy,
