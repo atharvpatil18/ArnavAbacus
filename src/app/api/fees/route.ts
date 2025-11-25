@@ -5,6 +5,8 @@ import { UserRole, requireRole } from '@/lib/rbac'
 import { createFeeSchema, validateRequest } from '@/lib/validation'
 import { logger } from '@/lib/logger'
 import { ratelimit } from '@/lib/ratelimit'
+import { logActivity } from '@/lib/activity-logger'
+import { sendEmail } from '@/lib/notifications'
 
 export async function GET(request: Request) {
     try {
@@ -32,22 +34,39 @@ export async function GET(request: Request) {
             where.student = { parentId: session.user.id }
         }
 
-        const fees = await prisma.feeRecord.findMany({
-            where,
-            include: {
-                student: {
-                    select: {
-                        name: true,
-                        level: true,
-                    }
-                }
-            },
-            orderBy: {
-                dueDate: 'desc',
-            },
-        })
+        const page = parseInt(searchParams.get('page') || '1')
+        const limit = parseInt(searchParams.get('limit') || '10')
+        const skip = (page - 1) * limit
 
-        return NextResponse.json(fees)
+        const [fees, total] = await Promise.all([
+            prisma.feeRecord.findMany({
+                where,
+                include: {
+                    student: {
+                        select: {
+                            name: true,
+                            level: true,
+                        }
+                    }
+                },
+                orderBy: {
+                    dueDate: 'desc',
+                },
+                skip,
+                take: limit,
+            }),
+            prisma.feeRecord.count({ where })
+        ])
+
+        return NextResponse.json({
+            data: fees,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        })
     } catch (error) {
         logger.error({ error, context: 'FEES_GET' }, 'Failed to fetch fees')
         return new NextResponse('Internal Error', { status: 500 })
@@ -99,7 +118,41 @@ export async function POST(request: Request) {
                 remarks,
                 status: feeStatus,
             },
+            include: {
+                student: {
+                    select: {
+                        name: true,
+                        email: true,
+                        parent: {
+                            select: {
+                                email: true,
+                                name: true
+                            }
+                        }
+                    }
+                }
+            }
         })
+
+        // Log activity
+        await logActivity(session.user.id, 'CREATE_FEE', {
+            feeId: fee.id,
+            studentName: fee.student.name,
+            amount: fee.amount,
+            status: fee.status
+        })
+
+        // Send notification if paid
+        if (fee.status === 'PAID') {
+            const parentEmail = fee.student.parent?.email
+            if (parentEmail && typeof parentEmail === 'string') {
+                await sendEmail(
+                    parentEmail,
+                    'Fee Payment Receipt',
+                    `Dear ${fee.student.parent?.name}, we have received a payment of ₹${fee.amount} for ${fee.student.name}.`
+                )
+            }
+        }
 
         return NextResponse.json(fee)
     } catch (error) {

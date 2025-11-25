@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import { isAdmin, isTeacher } from '@/lib/rbac'
+import { logger } from '@/lib/logger'
 
 export async function GET() {
     try {
@@ -16,6 +17,9 @@ export async function GET() {
         if (isTeacher(session)) {
             whereClause = { teacherId: userId }
         }
+
+        // Explicitly log for debugging
+        logger.info({ userId, role: session.user.role, whereClause }, 'Fetching demos with filter')
 
         const demos = await prisma.demoClass.findMany({
             where: whereClause,

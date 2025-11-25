@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Calendar, Clock, CheckCircle, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,7 @@ interface Batch {
 }
 
 export default function AttendancePage() {
+    const { data: session } = useSession()
     const [batches, setBatches] = useState<Batch[]>([])
     const [loading, setLoading] = useState(true)
 
@@ -93,11 +95,19 @@ export default function AttendancePage() {
                                         </div>
                                         {batch.days}
                                     </div>
-                                    <Button asChild className="w-full mt-4 bg-bead-green hover:bg-bead-green/90 text-white border-2 border-border shadow-[2px_2px_0px_0px_var(--border)] active:translate-y-[2px] active:shadow-none transition-all font-bold">
-                                        <Link href={`/attendance/mark/${batch.id}`}>
-                                            Mark Attendance <ArrowRight className="ml-2 h-4 w-4" />
-                                        </Link>
-                                    </Button>
+                                    {session?.user?.role !== 'PARENT' ? (
+                                        <Button asChild className="w-full mt-4 bg-bead-green hover:bg-bead-green/90 text-white border-2 border-border shadow-[2px_2px_0px_0px_var(--border)] active:translate-y-[2px] active:shadow-none transition-all font-bold">
+                                            <Link href={`/attendance/mark/${batch.id}`}>
+                                                Mark Attendance <ArrowRight className="ml-2 h-4 w-4" />
+                                            </Link>
+                                        </Button>
+                                    ) : (
+                                        <Button asChild variant="outline" className="w-full mt-4 border-2 border-border font-bold">
+                                            <Link href={`/attendance/view/${batch.id}`}>
+                                                View Attendance
+                                            </Link>
+                                        </Button>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

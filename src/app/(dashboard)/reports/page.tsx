@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, CreditCard, Calendar, TrendingUp } from 'lucide-react'
 import { ReportsCharts } from '@/components/dashboard/reports-charts'
+import { ExportButton } from '@/components/dashboard/export-button'
 
 async function getStats() {
     const [
@@ -52,11 +53,23 @@ export default async function ReportsPage() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <div>
-                <h2 className="text-3xl font-bold tracking-tight">Reports & Analytics</h2>
-                <p className="text-muted-foreground">
-                    Overview of academy performance and key metrics.
-                </p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-3xl font-bold tracking-tight">Reports & Analytics</h2>
+                    <p className="text-muted-foreground">
+                        Overview of academy performance and key metrics.
+                    </p>
+                </div>
+                <form action={async () => {
+                    'use server'
+                    // In a real app, this would generate a CSV/PDF buffer
+                    // For now, we'll just redirect or show a toast via client component
+                    // But since this is a server component, we can't easily trigger download without client interaction
+                    // So we'll make a client component wrapper for the button
+                }}>
+                    {/* Placeholder for server action if needed */}
+                </form>
+                <ExportButton stats={stats} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

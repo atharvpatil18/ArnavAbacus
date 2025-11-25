@@ -27,10 +27,20 @@ interface Batch {
     }
 }
 
+import { useSearchParams, useRouter } from 'next/navigation'
+import { BatchFilters } from '@/components/batches/batch-filters'
+
+// ... imports ...
+
 export default function BatchesPage() {
-    const [searchTerm, setSearchTerm] = useState('')
+    const searchParams = useSearchParams()
+    const router = useRouter()
     const [batches, setBatches] = useState<Batch[]>([])
     const [loading, setLoading] = useState(true)
+
+    const searchTerm = searchParams.get('query') || ''
+    const levelFilter = searchParams.get('level') || 'all'
+    const dayFilter = searchParams.get('day') || 'all'
 
     useEffect(() => {
         const fetchBatches = async () => {
@@ -49,10 +59,26 @@ export default function BatchesPage() {
         fetchBatches()
     }, [])
 
-    const filteredBatches = batches.filter(batch =>
-        batch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        batch.level.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    const filteredBatches = batches.filter(batch => {
+        const matchesSearch = batch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            batch.level.toLowerCase().includes(searchTerm.toLowerCase())
+
+        const matchesLevel = levelFilter === 'all' || batch.level === levelFilter
+
+        const matchesDay = dayFilter === 'all' || batch.days.includes(dayFilter)
+
+        return matchesSearch && matchesLevel && matchesDay
+    })
+
+    const handleSearch = (term: string) => {
+        const params = new URLSearchParams(searchParams.toString())
+        if (term) {
+            params.set('query', term)
+        } else {
+            params.delete('query')
+        }
+        router.push(`/batches?${params.toString()}`)
+    }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -63,24 +89,27 @@ export default function BatchesPage() {
                         Manage class schedules and student assignments.
                     </p>
                 </div>
-                <Button asChild className="bg-indigo-600 hover:bg-indigo-700">
+                <Button asChild className="bg-indigo-600 hover:bg-indigo-700 shadow-hard border-2 border-border">
                     <Link href="/batches/new">
                         <Plus className="mr-2 h-4 w-4" /> Create Batch
                     </Link>
                 </Button>
             </div>
 
-            <div className="flex items-center gap-2">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="search"
-                        placeholder="Search batches..."
-                        className="pl-8"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+            <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                    <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search batches..."
+                            className="pl-8 border-2 border-border"
+                            value={searchTerm}
+                            onChange={(e) => handleSearch(e.target.value)}
+                        />
+                    </div>
                 </div>
+                <BatchFilters />
             </div>
 
             {loading ? (

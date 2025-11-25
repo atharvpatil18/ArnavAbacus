@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import { isAdmin, isTeacher, isParent } from '@/lib/rbac'
+import { logger } from '@/lib/logger'
 
 export async function GET() {
     try {
@@ -24,6 +25,9 @@ export async function GET() {
                 student: { parentId: userId }
             }
         }
+
+        // Explicitly log for debugging
+        logger.info({ userId, role: session.user.role, whereClause }, 'Fetching exams with filter')
 
         const exams = await prisma.exam.findMany({
             where: whereClause,

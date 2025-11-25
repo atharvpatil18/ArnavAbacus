@@ -83,6 +83,12 @@ export default function DemosPage() {
         }
     }
 
+    // Calculate stats
+    const totalDemos = demos.length
+    const totalStudents = demos.reduce((acc, demo) => acc + demo.students.length, 0)
+    const convertedStudents = demos.reduce((acc, demo) => acc + demo.students.filter((s: any) => s.converted).length, 0)
+    const conversionRate = totalStudents > 0 ? Math.round((convertedStudents / totalStudents) * 100) : 0
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -160,65 +166,95 @@ export default function DemosPage() {
                 </Dialog>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {loading ? (
-                    <div>Loading demos...</div>
-                ) : demos.length === 0 ? (
-                    <div className="col-span-full text-center py-12 text-muted-foreground">
-                        <Users className="mx-auto h-12 w-12 text-gray-300 mb-2" />
-                        <p>No demo classes scheduled.</p>
-                    </div>
-                ) : (
-                    demos.map((demo) => (
-                        <Card key={demo.id} className="border-2 border-border shadow-hard">
-                            <CardHeader className="pb-2">
-                                <div className="flex justify-between items-start">
-                                    <CardTitle className="text-lg font-bold flex items-center gap-2">
-                                        <Calendar className="h-4 w-4 text-bead-green" />
-                                        {new Date(demo.date).toLocaleDateString()}
-                                    </CardTitle>
-                                    <Badge variant="outline">{demo.timeSlot}</Badge>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    <div className="text-sm text-muted-foreground">
-                                        Teacher: {demo.teacher?.name || 'Unassigned'}
-                                    </div>
-                                    <div className="space-y-2">
-                                        <h4 className="text-sm font-semibold">Attendees</h4>
-                                        {demo.students.length === 0 ? (
-                                            <p className="text-sm text-muted-foreground">No students added.</p>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                {demo.students.map((student: any) => (
-                                                    <div key={student.id} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded border border-border">
-                                                        <div>
-                                                            <p className="font-medium">{student.name}</p>
-                                                            <p className="text-xs text-muted-foreground">{student.contact}</p>
-                                                        </div>
-                                                        {student.converted ? (
-                                                            <Badge className="bg-green-100 text-green-800 border-green-200">Joined</Badge>
-                                                        ) : (
-                                                            <Button 
-                                                                size="sm" 
-                                                                variant="ghost" 
-                                                                className="h-6 text-xs hover:text-bead-green hover:bg-green-50"
+            {/* Stats Cards */}
+            <div className="grid gap-4 md:grid-cols-3">
+                <Card className="border-2 border-border shadow-hard">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Demos</CardTitle>
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{totalDemos}</div>
+                    </CardContent>
+                </Card>
+                <Card className="border-2 border-border shadow-hard">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{totalStudents}</div>
+                    </CardContent>
+                </Card>
+                <Card className="border-2 border-border shadow-hard">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+                        <CheckCircle className="h-4 w-4 text-bead-green" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-bead-green">{conversionRate}%</div>
+                        <p className="text-xs text-muted-foreground">{convertedStudents} converted</p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className="rounded-xl border-2 border-border bg-card shadow-hard overflow-hidden">
+                <Table>
+                    <TableHeader className="bg-secondary border-b-2 border-border">
+                        <TableRow>
+                            <TableHead className="font-bold">Date & Time</TableHead>
+                            <TableHead className="font-bold">Teacher</TableHead>
+                            <TableHead className="font-bold">Students</TableHead>
+                            <TableHead className="font-bold text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {loading ? (
+                            <TableRow>
+                                <TableCell colSpan={4} className="text-center py-8">Loading...</TableCell>
+                            </TableRow>
+                        ) : demos.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">No demo classes found.</TableCell>
+                                </TableRow>
+                            ) : (
+                                demos.map((demo) => (
+                                <TableRow key={demo.id} className="border-b border-border hover:bg-muted/50">
+                                    <TableCell>
+                                        <div className="font-medium">{new Date(demo.date).toLocaleDateString()}</div>
+                                        <div className="text-xs text-muted-foreground">{demo.timeSlot}</div>
+                                    </TableCell>
+                                    <TableCell>{demo.teacher?.name || 'Unassigned'}</TableCell>
+                                    <TableCell>
+                                        <div className="space-y-1">
+                                            {demo.students.map((student: any) => (
+                                                <div key={student.id} className="flex items-center gap-2 text-sm">
+                                                    <span>{student.name}</span>
+                                                    {student.converted ? (
+                                                        <Badge variant="outline" className="text-[10px] bg-green-50 text-green-700 border-green-200">Joined</Badge>
+                                                    ) : (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost" 
+                                                                className="h-5 px-2 text-[10px] hover:text-bead-green hover:bg-green-50"
                                                                 onClick={() => handleConvert(student.id)}
                                                             >
-                                                                Convert <ArrowRight className="ml-1 h-3 w-3" />
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))
-                )}
+                                                            Convert
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            {demo.students.length === 0 && <span className="text-muted-foreground text-sm">No students</span>}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="sm">Edit</Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
             </div>
         </div>
     )

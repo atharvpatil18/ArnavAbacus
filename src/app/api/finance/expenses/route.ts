@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import { isAdmin } from '@/lib/rbac'
+import { logger } from '@/lib/logger'
 
 export async function GET() {
     try {
@@ -9,6 +10,9 @@ export async function GET() {
         if (!session || !session.user || !isAdmin(session)) {
             return new NextResponse('Unauthorized', { status: 401 })
         }
+
+        // Explicitly log for debugging
+        logger.info({ userId: session.user.id, role: session.user.role }, 'Fetching expenses')
 
         const expenses = await prisma.expense.findMany({
             orderBy: { date: 'desc' }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Plus, Search, MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -25,34 +26,46 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { StudentFilters } from '@/components/students/student-filters'
+import { Pagination } from '@/components/ui/pagination'
+import { TableSkeleton } from '@/components/ui/skeletons/table-skeleton'
 
 import { Suspense } from 'react'
 
 function StudentsContent() {
+    const { data: session } = useSession()
     const searchParams = useSearchParams()
     const [searchTerm, setSearchTerm] = useState('')
     const [students, setStudents] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1)
 
     useEffect(() => {
         const fetchStudents = async () => {
+            setLoading(true)
             try {
                 // Build query string from search params
                 const params = new URLSearchParams()
                 if (searchTerm) params.set('query', searchTerm)
 
+                // Add pagination params
+                const currentPage = searchParams.get('page') || '1'
+                params.set('page', currentPage)
+                setPage(parseInt(currentPage))
+
                 // Add filters from URL
                 searchParams.forEach((value, key) => {
-                    if (key !== 'query') {
+                    if (key !== 'query' && key !== 'page') {
                         params.set(key, value)
                     }
                 })
 
                 const res = await fetch(`/api/students?${params.toString()}`)
                 if (res.ok) {
-                    const data = await res.json()
+                    const { data, meta } = await res.json()
                     setStudents(data)
+                    setTotalPages(meta.totalPages)
                     setError(null)
                 } else {
                     setError('Failed to load students')
@@ -117,8 +130,10 @@ function StudentsContent() {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center py-10">
-                                    Loading...
+                                <TableCell colSpan={7} className="p-0">
+                                    <div className="p-4">
+                                        <TableSkeleton columnCount={7} rowCount={10} />
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : error ? (
@@ -201,7 +216,9 @@ function StudentsContent() {
                                                     <Link href={`/students/${student.id}/edit`}>Edit Details</Link>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator className="bg-border" />
-                                                <DropdownMenuItem className="focus:bg-secondary focus:text-secondary-foreground cursor-pointer">Mark Attendance</DropdownMenuItem>
+                                                {session?.user?.role !== 'PARENT' && (
+                                                    <DropdownMenuItem className="focus:bg-secondary focus:text-secondary-foreground cursor-pointer">Mark Attendance</DropdownMenuItem>
+                                                )}
                                                 <DropdownMenuItem className="focus:bg-secondary focus:text-secondary-foreground cursor-pointer">Record Fee Payment</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -212,6 +229,7 @@ function StudentsContent() {
                     </TableBody>
                 </Table>
             </div>
+            <Pagination currentPage={page} totalPages={totalPages} />
         </div>
     )
 }

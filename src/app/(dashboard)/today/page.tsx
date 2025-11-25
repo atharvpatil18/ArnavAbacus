@@ -40,8 +40,10 @@ async function getTodaysBatches(teacherId?: string) {
     // Filter batches that have today's day in their schedule
     const todaysBatches = allBatches.filter(batch => {
         if (!batch.days) return false
-        const days = batch.days.split(',').map(d => d.trim())
-        return days.includes(dayName)
+        const days = batch.days.split(',').map(d => d.trim().toLowerCase())
+        // Debug log for development
+        // console.log(`Checking batch ${batch.name}: days=[${days}], today=${dayName.toLowerCase()}`)
+        return days.includes(dayName.toLowerCase())
     })
 
     return todaysBatches
@@ -64,6 +66,7 @@ export default async function TodaySchedulePage() {
     const batches = await getTodaysBatches(teacherId)
 
     const today = format(new Date(), 'EEEE, MMMM dd, yyyy')
+    const dayName = format(new Date(), 'EEEE')
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -78,7 +81,7 @@ export default async function TodaySchedulePage() {
             {batches.length === 0 ? (
                 <Card className="border-2 border-border shadow-[4px_4px_0px_0px_var(--border)] rounded-xl">
                     <CardContent className="py-12 text-center">
-                        <p className="text-muted-foreground font-medium">No batches scheduled for today.</p>
+                        <p className="text-muted-foreground font-medium">No batches scheduled for {dayName}.</p>
                     </CardContent>
                 </Card>
             ) : (

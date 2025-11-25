@@ -164,8 +164,9 @@ export default function CalendarPage() {
                                     modifiersStyles={{
                                         hasData: {
                                             fontWeight: 'bold',
-                                            textDecoration: 'underline',
-                                            color: 'var(--primary)'
+                                            backgroundColor: 'var(--bead-green)',
+                                            color: 'white',
+                                            borderRadius: '50%'
                                         }
                                     }}
                                 />

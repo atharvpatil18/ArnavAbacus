@@ -164,7 +164,7 @@ export default function DashboardPage() {
             icon: Users,
             color: 'text-white',
             bg: 'bg-bead-blue',
-            border: 'border-border'
+            borderColor: 'border-bead-blue'
         },
         {
             title: 'Active Batches',
@@ -174,7 +174,7 @@ export default function DashboardPage() {
             icon: Calendar,
             color: 'text-white',
             bg: 'bg-bead-purple',
-            border: 'border-border'
+            borderColor: 'border-bead-purple'
         },
         {
             title: 'Pending Fees',
@@ -184,7 +184,7 @@ export default function DashboardPage() {
             icon: CreditCard,
             color: 'text-white',
             bg: 'bg-bead-yellow',
-            border: 'border-border'
+            borderColor: 'border-bead-yellow'
         },
         {
             title: 'Attendance Rate',
@@ -194,7 +194,7 @@ export default function DashboardPage() {
             icon: TrendingUp,
             color: 'text-white',
             bg: 'bg-bead-green',
-            border: 'border-border'
+            borderColor: 'border-bead-green'
         },
     ]
 
@@ -225,7 +225,7 @@ export default function DashboardPage() {
                     statsCards.map((stat) => {
                         const Icon = stat.icon
                         return (
-                            <Card key={stat.title} className="hover:-translate-y-1 transition-transform duration-200 border-2 border-border shadow-[4px_4px_0px_0px_var(--border)]">
+                            <Card key={stat.title} className={cn("hover:-translate-y-1 transition-transform duration-200 border-2 shadow-[4px_4px_0px_0px_var(--border)]", stat.borderColor)}>
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-bold text-muted-foreground">
                                         {stat.title}
@@ -257,7 +257,7 @@ export default function DashboardPage() {
             {/* Removed DashboardCharts placeholder as per Phase 6.2 */}
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-                <Card className="col-span-4 border-2 border-border shadow-[4px_4px_0px_0px_var(--border)]">
+                <Card className="col-span-4 border-2 border-border shadow-[4px_4px_0px_0px_var(--border)] border-t-4 border-t-bead-blue">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 font-sans">
                             <Activity className="h-5 w-5 text-bead-blue" />
@@ -278,7 +278,7 @@ export default function DashboardPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="col-span-3 border-2 border-border shadow-[4px_4px_0px_0px_var(--border)]">
+                <Card className="col-span-3 border-2 border-border shadow-[4px_4px_0px_0px_var(--border)] border-t-4 border-t-bead-purple">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 font-sans">
                             <Calendar className="h-5 w-5 text-bead-purple" />

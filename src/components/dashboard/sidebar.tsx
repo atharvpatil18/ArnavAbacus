@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSession, signOut } from 'next-auth/react'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const allRoutes = [
     {
@@ -146,15 +147,16 @@ export function Sidebar() {
                     })}
                 </div>
             </div>
-            <div className="px-4 py-2">
+            <div className="px-4 py-2 flex items-center justify-between gap-2">
                 <Button
                     onClick={() => signOut({ callbackUrl: '/login' })}
                     variant="ghost"
-                    className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:border-destructive/20"
+                    className="flex-1 justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:border-destructive/20"
                 >
                     <LogOut className="h-5 w-5 mr-3" />
                     Sign Out
                 </Button>
+                <ThemeToggle />
             </div>
         </div>
     )

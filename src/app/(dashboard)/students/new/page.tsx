@@ -50,16 +50,18 @@ const formSchema = z.object({
         message: 'Name must be at least 2 characters.',
     }),
     dob: z.date({
-        // required_error: 'A date of birth is required.',
+        required_error: 'Date of birth is required.',
     }),
     gender: z.string().min(1, {
         message: 'Please select a gender.',
     }),
-    contactNumber: z.string().min(10, {
-        message: 'Contact number must be at least 10 digits.',
+    contactNumber: z.string().regex(/^\d{10}$/, {
+        message: 'Contact number must be exactly 10 digits.',
     }),
-    email: z.string().email().optional().or(z.literal('')),
-    address: z.string().optional(),
+    email: z.string().email('Invalid email address.').optional().or(z.literal('')),
+    address: z.string().min(5, {
+        message: 'Address must be at least 5 characters.',
+    }).optional().or(z.literal('')),
     level: z.string().min(1, {
         message: 'Please select a level.',
     }),
@@ -67,7 +69,7 @@ const formSchema = z.object({
         message: 'Parent name is required.',
     }),
     parentEmail: z.string().email({
-        message: 'Invalid email address.',
+        message: 'Invalid parent email address.',
     }),
 })
 

@@ -4,6 +4,8 @@ import { auth } from '@/auth'
 import { hash } from 'bcryptjs'
 import { UserRole, requireRole } from '@/lib/rbac'
 import { createStudentSchema, validateRequest, sanitizeEmail, sanitizeString } from '@/lib/validation'
+import { logActivity } from '@/lib/activity-logger'
+import { sendEmail } from '@/lib/notifications'
 
 export async function GET(request: Request) {
     try {
@@ -61,31 +63,48 @@ export async function GET(request: Request) {
             orderBy.createdAt = sortOrder
         }
 
-        const students = await prisma.student.findMany({
-            where,
-            include: {
-                parent: {
-                    select: {
-                        name: true,
-                        email: true,
-                    }
-                },
-                batch: {
-                    select: {
-                        name: true,
-                        timeSlot: true,
-                        days: true,
-                    }
-                },
-                feeRecords: {
-                    where: { status: 'PENDING' },
-                    select: { id: true }
-                }
-            },
-            orderBy,
-        })
+        const page = parseInt(searchParams.get('page') || '1')
+        const limit = parseInt(searchParams.get('limit') || '10')
+        const skip = (page - 1) * limit
 
-        return NextResponse.json(students)
+        const [students, total] = await Promise.all([
+            prisma.student.findMany({
+                where,
+                include: {
+                    parent: {
+                        select: {
+                            name: true,
+                            email: true,
+                        }
+                    },
+                    batch: {
+                        select: {
+                            name: true,
+                            timeSlot: true,
+                            days: true,
+                        }
+                    },
+                    feeRecords: {
+                        where: { status: 'PENDING' },
+                        select: { id: true }
+                    }
+                },
+                orderBy,
+                skip,
+                take: limit,
+            }),
+            prisma.student.count({ where })
+        ])
+
+        return NextResponse.json({
+            data: students,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        })
     } catch (error) {
         console.error('[STUDENTS_GET]', error)
         return new NextResponse('Internal Error', { status: 500 })
@@ -158,6 +177,22 @@ export async function POST(request: Request) {
                 parentId: parent.id,
             },
         })
+
+        // Log activity
+        await logActivity(session.user.id, 'CREATE_STUDENT', {
+            studentId: student.id,
+            name: student.name,
+            level: student.level
+        })
+
+        // Send welcome email to parent
+        if (parent.email && typeof parent.email === 'string') {
+            await sendEmail(
+                parent.email,
+                'Welcome to Arnav Abacus Academy',
+                `Dear ${parent.name}, your child ${student.name} has been successfully enrolled.`
+            )
+        }
 
         return NextResponse.json({
             student,

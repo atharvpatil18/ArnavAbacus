@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Plus, Search, GraduationCap, Trophy, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,11 +16,16 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { ExamFilters } from '@/components/exams/exam-filters'
 
 export default function ExamsPage() {
+    const searchParams = useSearchParams()
+    const router = useRouter()
     const [exams, setExams] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const [searchTerm, setSearchTerm] = useState('')
+
+    const searchTerm = searchParams.get('query') || ''
+    const subjectFilter = searchParams.get('subject') || 'all'
 
     useEffect(() => {
         const fetchExams = async () => {
@@ -38,10 +44,22 @@ export default function ExamsPage() {
         fetchExams()
     }, [])
 
-    const filteredExams = exams.filter(exam => 
-        exam.student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        exam.level.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    const filteredExams = exams.filter(exam => {
+        const matchesSearch = exam.student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            exam.level.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchesSubject = subjectFilter === 'all' || exam.subject === subjectFilter // Assuming exam has subject field
+        return matchesSearch && matchesSubject
+    })
+
+    const handleSearch = (term: string) => {
+        const params = new URLSearchParams(searchParams.toString())
+        if (term) {
+            params.set('query', term)
+        } else {
+            params.delete('query')
+        }
+        router.push(`/exams?${params.toString()}`)
+    }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -59,17 +77,20 @@ export default function ExamsPage() {
                 </Button>
             </div>
 
-            <div className="flex items-center gap-2">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="search"
-                        placeholder="Search student or level..."
-                        className="pl-8 border-2 border-border focus-visible:ring-0 focus-visible:border-bead-green"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+            <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                    <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search student or level..."
+                            className="pl-8 border-2 border-border focus-visible:ring-0 focus-visible:border-bead-green"
+                            value={searchTerm}
+                            onChange={(e) => handleSearch(e.target.value)}
+                        />
+                    </div>
                 </div>
+                <ExamFilters />
             </div>
 
             <Card className="border-2 border-border shadow-hard">
